@@ -32,12 +32,12 @@ class Register(slixmpp.ClientXMPP):
 
         try:
             iq.send()
-            print("New account created", self.boundjid,"\n")
+            print("Account Created Successfully...", self.boundjid,"\n")
         except IqError as e:
-            print("Error on registration ", e,"\n")
+            print("Something went wrong... ", e,"\n")
             self.disconnect()
         except IqTimeout:
-            print("THE SERVER IS NOT WITH YOU")
+            print("Timeout...")
             self.disconnect()
         except Exception as e:
             print(e)
