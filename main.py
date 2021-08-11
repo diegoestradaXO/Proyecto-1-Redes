@@ -9,9 +9,59 @@ import logging
 from getpass import getpass
 from argparse import ArgumentParser
 
+
 import slixmpp
+from slixmpp.xmlstream.stanzabase import ET, ElementBase
+from slixmpp.exceptions import IqError, IqTimeout
+
+class Unregister(slixmpp.ClientXMPP):
+    """
+
+    This class was made for deleting an especific account in a xmpp server.
+    In order to delete an existent account, a JID and a password must be provided.
+    The JID is composed by the node/username, a domain and finally the resource (optional).
+    For example: test@alumchat.xyz/mobile , password:1234
+
+    """
+    def __init__(self, jid, password):
+        slixmpp.ClientXMPP.__init__(self, jid, password)
+
+        self.user = jid
+        self.add_event_handler("session_start", self.start)
+
+    def start(self, event):
+        self.send_presence()
+        self.get_roster()
+        resp = self.Iq()
+        resp['type'] = 'set'
+        resp['from'] = self.user 
+        resp['id'] = 'unreg1'
+        query = "<query xmlns='jabber:iq:register'>\
+                <remove/>'\
+                </query> "
+        resp.append(ET.fromstring(query))
+        try:
+            print("Removing account.....")
+            resp.send()
+        #Error Handling
+        except IqError as e:
+            print("Could not remove account")
+            self.disconnect()
+        #Time out handling Handling
+        except IqTimeout:
+            print("Server did not respond")
+        
+        self.disconnect() 
 
 class Register(slixmpp.ClientXMPP):
+    """
+
+    This class was made for registering new users in a xmpp server.
+    In order to register a new account, a JID and a password must be provided.
+    The JID is composed by the node/username, a domain and finally the resource (optional).
+    For example: test@alumchat.xyz/mobile , password:1234
+
+    """
     def __init__(self, jid, password):
         slixmpp.ClientXMPP.__init__(self, jid, password)
 
@@ -43,11 +93,10 @@ class Register(slixmpp.ClientXMPP):
             print(e)
             self.disconnect()  
 
-class SendMsgBot(slixmpp.ClientXMPP):
+class Client(slixmpp.ClientXMPP):
 
     """
-    A basic Slixmpp bot that will log in, send a message,
-    and then log out.
+    
     """
 
     def __init__(self, jid, password, recipient, message):
@@ -65,6 +114,7 @@ class SendMsgBot(slixmpp.ClientXMPP):
         # listen for this event so that we we can initialize
         # our roster.
         self.add_event_handler("session_start", self.start)
+
         ### Nos conectamos al servidor
         
 
@@ -85,19 +135,32 @@ class SendMsgBot(slixmpp.ClientXMPP):
             self.send_message(mto=self.recipient,
                           mbody=self.msg,
                           mtype='chat')
-
-
         self.disconnect()
-        # await self.get_roster()
 
-        
-
-        # self.disconnect()
-
-
+        #Eliminate account from server        
+    def delete_account(self):#Create iq Stanza
+        resp = self.Iq()
+        resp['type'] = 'set'
+        resp['from'] = self.user 
+        resp['id'] = 'unreg1'
+        query = "<query xmlns='jabber:iq:register'>\
+                <remove/>'\
+                </query> "
+        resp.append(ET.fromstring(query))
+        try:
+            print("Removing account.....")
+            resp.send()
+        #Error Handling
+        except IqError as e:
+            print("Could not remove account")
+            self.disconnect()
+        #Time out handling Handling
+        except IqTimeout:
+            print("Server did no respond")
+            self.disconnect()
 if __name__ == '__main__':
     # Setup the command line arguments.
-    parser = ArgumentParser(description=SendMsgBot.__doc__)
+    parser = ArgumentParser(description=Client.__doc__)
 
     # Output verbosity options.
     parser.add_argument("-q", "--quiet", help="set logging to ERROR",
@@ -138,7 +201,7 @@ if __name__ == '__main__':
             if (op == "1"):
                 args.jid = input("Enter username: ")
                 args.password =  getpass(prompt='Enter password: ')
-                xmpp = SendMsgBot(args.jid, args.password,"","")
+                xmpp = Client(args.jid, args.password,"","")
                 # xmpp.register_plugin('xep_0030') # Service Discovery
                 # xmpp.register_plugin('xep_0199') # XMPP Ping
                 xmpp.connect()
@@ -183,24 +246,18 @@ if __name__ == '__main__':
                     args.to = input("Send To: ")
                 if args.message is None:
                     args.message = input("Message: ")
-                xmpp = SendMsgBot(args.jid,args.password,args.to,args.message)
+                xmpp = Client(args.jid,args.password,args.to,args.message)
+                xmpp.connect()
+                xmpp.process(forever=False)
+            if(op=="11"):
+                xmpp = Unregister(args.jid,args.password)
+                
                 xmpp.connect()
                 xmpp.process(forever=False)
 
-    # if args.jid is None:
-    #     args.jid = input("Username: ")
-    # if args.password is None:
-    #     args.password = getpass("Password: ")
-    # if args.to is None:
-    #     args.to = input("Send To: ")
-    # if args.message is None:register
-    #     args.message = input("Message: ")
+                print("Done...")
+                notlogged = True
+            if(op=="12"):
+                notlogged = True
 
-    # Setup the EchoBot and register plugins. Note that while plugins may
-    # have interdependencies, the order in which you register them does
-    # not matter.
-    # xmpp = SendMsgBot(args.jid, args.password, args.to, args.message)
-    # xmpp.register_plugin('xep_0030') # Service Discovery
-    # xmpp.register_plugin('xep_0199') # XMPP Ping
 
-    # Connect to the XMPP server and start processing XMPP stanzas.
