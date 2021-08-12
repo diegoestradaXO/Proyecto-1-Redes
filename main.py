@@ -257,7 +257,7 @@ if __name__ == '__main__':
             print("|2.  Add user to the roster                      |")
             print("|3.  Show user info                              |")
             print("|4.  Direct message                              |")
-            print("|5.  Group message                               |") #Add group validation
+            print("|5.  Group message                               |")
             print("|6.  Define presence                             |")
             print("|7.  Send notification                           |")
             print("|8.  Join group                                  |")
