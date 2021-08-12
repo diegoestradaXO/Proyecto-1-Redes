@@ -1,7 +1,7 @@
 # Author: Diego Estrada
 # Org: Universidad del Valle de Guatemala
 # Department: Computer Science
-# August 11th 2021
+# August 12th 2021
 
 
 import logging
@@ -173,12 +173,13 @@ class Client(slixmpp.ClientXMPP):
                      event does not provide any additional
                      data.
         """
-        if(self.presence_message != ""):
+        if(self.presence_message != ""): # if a different presence message was given, send it to the contacts in the roster 
             self.send_presence(pshow="chat", pstatus=self.presence_message)
         else:
             self.send_presence(pshow="chat", pstatus="Just logged in")
         self.get_roster()
-        if(self.msg != ""):
+
+        if(self.msg != ""): # if a message string was given, then send the message to de recipient
             self.send_message(mto=self.recipient,
                           mbody=self.msg,
                           mtype='chat')
@@ -216,6 +217,7 @@ if __name__ == '__main__':
     logging.basicConfig(level=args.loglevel,
                         format='%(levelname)-8s %(message)s')
 
+# Main Menu
     notlogged = True
     flag = True
     while flag:
@@ -272,25 +274,27 @@ if __name__ == '__main__':
             print("Type a number: ")
             
             op = input()
-            if(op=="2"):
+            if(op=="2"): # Add user to roster
                 userToAdd = input("Username: ")
                 xmpp = AddUser(args.jid,args.password, userToAdd)
                 # xmpp.addUser(userToAdd)
                 xmpp.connect()
                 xmpp.process(forever=False)
-            if(op=="4"):
+
+            if(op=="4"): # Send direct message
                 args.to = input("Send To: ")
                 args.message = input("Message: ")
                 xmpp = Client(args.jid,args.password,args.to,args.message,"")
                 xmpp.connect()
                 xmpp.process(forever=False)
-            if(op=="6"):
+
+            if(op=="6"): # Define presence message
                 messageForPresence = input("Message: ")
                 xmpp = Client(args.jid,args.password,args.to,"", messageForPresence)
                 xmpp.connect()
                 xmpp.process(forever=False)
 
-            if(op=="11"):
+            if(op=="11"): # Delete account
                 xmpp = Unregister(args.jid,args.password)
                 
                 xmpp.connect()
@@ -298,7 +302,8 @@ if __name__ == '__main__':
 
                 print("Done...")
                 notlogged = True
-            if(op=="12"):
+
+            if(op=="12"): # Exit and logoff
                 notlogged = True
 
 
