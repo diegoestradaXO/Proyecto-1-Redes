@@ -39,3 +39,6 @@ python main.py
 
 ## Author
 Diego Estrada https://github.com/diegoestradaXO
+
+## References
+Slixmpp documentation at https://sleekxmpp.readthedocs.io/en/latest/getting_started/sendlogout.html
