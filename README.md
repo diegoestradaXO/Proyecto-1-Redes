@@ -19,3 +19,13 @@
 - [x] Define presence message
 - [ ] Send/Recieve notifications
 - [ ] Send/Recieve files
+
+## Requirements
+- **Python** - 3.7+
+- **Slixmpp** - Python Library 1.7.1
+
+
+## Getting Started
+```sh
+python main.py
+```
