@@ -1,15 +1,13 @@
-#!/usr/bin/env python3
+# Author: Diego Estrada
+# Org: Universidad del Valle de Guatemala
+# Department: Computer Science
+# August 11th 2021
 
-# Slixmpp: The Slick XMPP Library
-# Copyright (C) 2010  Nathanael C. Fritz
-# This file is part of Slixmpp.
-# See the file LICENSE for copying permission.
 
 import logging
 from getpass import getpass
 from argparse import ArgumentParser
 import threading
-
 import slixmpp
 from slixmpp.xmlstream.stanzabase import ET, ElementBase
 from slixmpp.exceptions import IqError, IqTimeout
@@ -17,10 +15,12 @@ from slixmpp.exceptions import IqError, IqTimeout
 class AddUser(slixmpp.ClientXMPP):
     """
 
-    This class was made for deleting an especific account in a xmpp server.
-    In order to delete an existent account, a JID and a password must be provided.
-    The JID is composed by the node/username, a domain and finally the resource (optional).
-    For example: test@alumchat.xyz/mobile , password:1234
+    This class was made for adding an especific account to a user's roster.
+    In order to add other user to the roster, user and password of the client must be provided,
+    as well as the account you want to add to the roster.
+    For example: 
+        Client's user: test@alumchat.xyz/mobile , password:1234
+        User to add:   abc@alumchat.xyz
 
     """
     def __init__(self, jid, password, secondUser):
@@ -40,67 +40,6 @@ class AddUser(slixmpp.ClientXMPP):
         
         self.disconnect() 
 
-class ShowRoster(slixmpp.ClientXMPP):
-    """
-
-    This class was made for deleting an especific account in a xmpp server.
-    In order to delete an existent account, a JID and a password must be provided.
-    The JID is composed by the node/username, a domain and finally the resource (optional).
-    For example: test@alumchat.xyz/mobile , password:1234
-
-    """
-    def __init__(self, jid, password):
-        slixmpp.ClientXMPP.__init__(self, jid, password)
-        self.add_event_handler("session_start", self.start)
-        self.user = jid
-        self.precencias_recibir = threading.Event() ### Se maneja por aparte la recepcion de presencias
-
-
-    def start(self, event):
-        self.send_presence()
-        self.get_roster()
-        my_contacts = []
-        try:
-            self.get_roster()
-        except IqError as e:
-            print("No es posible obtener el roster", e)
-        except IqTimeout:
-            print("El servidor no responde")
-
-        ### Obtenemos las presencias de los contactos en nuestro roster
-        self.precencias_recibir.wait(3)
-
-        ### Se obtienen los grupos de nuestro roster
-        my_roster = self.client_roster.groups()
-        ### Se comienza a destazar la stanza para obtener los contactos y sus atributos
-        for grupo in my_roster:
-            ### Obtenemos usuario por usuario del roster
-            for usuario in my_roster[grupo]:
-                estado = ''
-                show = ''
-                respuesta = ''
-                self.mis_contactos.append(usuario)
-                nombre = self.client_roster[usuario]['name'] ### Obtencion del nombre del usuario
-                subscripcion = self.client_roster[usuario]['subscription'] ### Obtencion del tipo de suscripcion
-                conexiones = self.client_roster.presence(usuario) ### Obtencion de las conexiones
-                for respuesta, presencia in conexiones.items():
-                    if presencia['show']:
-                        show = presencia['show'] ### Obtencione del estado del usuario
-                    if presencia['status']:
-                        estado = presencia['status']
-
-                ### Se agrega el usuario a la lista
-                my_contacts.append([
-                    usuario,
-                    nombre,
-                    subscripcion,
-                    estado
-                ])
-        ### Devolvemos los contactos para procesarlos a impresion
-        print(my_contacts)
-    
-        
-        self.disconnect() 
 
 class Unregister(slixmpp.ClientXMPP):
     """
@@ -181,6 +120,7 @@ class Register(slixmpp.ClientXMPP):
             print(e)
             self.disconnect()  
 
+# TODO: document this
 class Client(slixmpp.ClientXMPP):
 
     """
@@ -195,7 +135,9 @@ class Client(slixmpp.ClientXMPP):
         self.user = jid
         self.recipient = recipient
         self.msg = message
-        self.option = op
+        self.presence_message = op
+
+
 
         # The session_start event will be triggered when
         # the bot establishes its connection with the server
@@ -206,6 +148,9 @@ class Client(slixmpp.ClientXMPP):
         self.add_event_handler("", self.start)
 
         ### Nos conectamos al servidor
+        self.register_plugin('xep_0047', {
+            'auto_accept': True
+        }) 
         
 
     def start(self, event):
@@ -219,70 +164,18 @@ class Client(slixmpp.ClientXMPP):
                      event does not provide any additional
                      data.
         """
-        self.send_presence()
+        if(self.presence_message != ""):
+            self.send_presence(pshow="chat", pstatus=self.presence_message)
+        else:
+            self.send_presence(pshow="chat", pstatus="Just logged in")
         self.get_roster()
         if(self.msg != ""):
             self.send_message(mto=self.recipient,
                           mbody=self.msg,
                           mtype='chat')
-        # if(self.option == "addUser"):
-        #     self.addUser()
-
-        # if(self.option == "contacts"):
-        #     self.contacts()
 
         self.disconnect()
-        
 
-    # def addUser(self, jid):
-    #     self.send_presence_subscription(pto=jid)
-
-      #List all roster users
-    def contacts(self):
-        groups = self.client_roster.groups() #get all roster gropus
-        print("Contact list: ")
-        for group in groups:
-            for jid in groups[group]: #get all roster Jids in group
-                print('-------------------------------------------')
-                #Print JID
-                print("JID: ", user)
-                if (len(self.client_roster[user]['name']) > 0):
-                    print("Name: ",self.client_roster[user]['name'])
-                else: 
-                    print("--- There is no name register ---")
-                #Print JID
-                presences = self.client_roster.presence(user)
-                if (len(self.client_roster.presence(user)) < 1):
-                    print("--- There is no presence register ---")
-                else:
-                    for p in presences:
-                        print('     Resource: ', p)
-                        print('     Show: ', presences[p]['show'])
-                        print('     Status: ', presences[p]['status'])
-                print('-------------------------------------------')
-        self.disconnect()
-
-        #Eliminate account from server        
-    # def delete_account(self):#Create iq Stanza
-    #     resp = self.Iq()
-    #     resp['type'] = 'set'
-    #     resp['from'] = self.user 
-    #     resp['id'] = 'unreg1'
-    #     query = "<query xmlns='jabber:iq:register'>\
-    #             <remove/>'\
-    #             </query> "
-    #     resp.append(ET.fromstring(query))
-    #     try:
-    #         print("Removing account.....")
-    #         resp.send()
-    #     #Error Handling
-    #     except IqError as e:
-    #         print("Could not remove account")
-    #         self.disconnect()
-    #     #Time out handling Handling
-    #     except IqTimeout:
-    #         print("Server did no respond")
-    #         self.disconnect()
 
 if __name__ == '__main__':
     # Setup the command line arguments.
@@ -368,11 +261,6 @@ if __name__ == '__main__':
             print("Type a number: ")
             
             op = input()
-            if(op=="1"):
-                xmpp = ShowRoster(args.jid,args.password)
-                # xmpp.contacts()
-                xmpp.connect()
-                xmpp.process(forever=False)
             if(op=="2"):
                 userToAdd = input("Username: ")
                 xmpp = AddUser(args.jid,args.password, userToAdd)
@@ -387,6 +275,12 @@ if __name__ == '__main__':
                 xmpp = Client(args.jid,args.password,args.to,args.message,"")
                 xmpp.connect()
                 xmpp.process(forever=False)
+            if(op=="6"):
+                messageForPresence = input("Message: ")
+                xmpp = Client(args.jid,args.password,args.to,"", messageForPresence)
+                xmpp.connect()
+                xmpp.process(forever=False)
+
             if(op=="11"):
                 xmpp = Unregister(args.jid,args.password)
                 
