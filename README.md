@@ -21,8 +21,15 @@
 - [ ] Send/Recieve files
 
 ## Requirements
-- **Python** - 3.7+
-- **Slixmpp** - Python Library 1.7.1
+The tools used for development and use were:
+```sh
+Python 3.7+
+Slixmpp 1.7.1
+```
+You can install them by running
+```sh
+pip install -r requirements.txt 
+```
 
 
 ## Getting Started
