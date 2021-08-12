@@ -120,10 +120,19 @@ class Register(slixmpp.ClientXMPP):
             print(e)
             self.disconnect()  
 
-# TODO: document this
 class Client(slixmpp.ClientXMPP):
 
     """
+
+    This class was made for both sending a message and defining a new
+    presence message. To send a direct message, user's JID and password
+    must be provided, as well as the recipient JID and the message to send.
+
+    To define a different presence message, user's JID, password and the 
+    new presence message must be provided.
+
+    If you only want to log in and test it, arguments aside from JID and password
+    can be passed as an empty string
     
     """
 
@@ -214,6 +223,7 @@ if __name__ == '__main__':
             print("|----------------------Menu----------------------|")
             print("|1.  Log in                                      |")
             print("|2.  Sign up                                     |")
+            print("|3.  Exit                                        |")
             print("|------------------------------------------------|")
             print("Enter the number of the option: ")
             op = input()
@@ -227,10 +237,8 @@ if __name__ == '__main__':
                 xmpp.process(forever=False)
                 notlogged = False
             elif (op == "2"):
-                if args.jid is None:
-                    args.jid = input("Username: ")
-                if args.password is None:
-                    args.password = getpass("Password: ")
+                args.jid = input("Username: ")
+                args.password = getpass("Password: ")
                 xmpp = Register(args.jid, args.password)
                 xmpp.register_plugin('xep_0030') ### Service Discovery
                 xmpp.register_plugin('xep_0004') ### Data Forms
@@ -238,6 +246,9 @@ if __name__ == '__main__':
                 xmpp.register_plugin('xep_0077') ### Band Registration
                 xmpp.connect()
                 xmpp.process(forever=False)
+            elif (op == "3"):
+                print("Goodbye! Thanks for using this client!")
+                flag = False
         else:
             print("Welcome " + args.jid)
 
@@ -268,10 +279,8 @@ if __name__ == '__main__':
                 xmpp.connect()
                 xmpp.process(forever=False)
             if(op=="4"):
-                if args.to is None:
-                    args.to = input("Send To: ")
-                if args.message is None:
-                    args.message = input("Message: ")
+                args.to = input("Send To: ")
+                args.message = input("Message: ")
                 xmpp = Client(args.jid,args.password,args.to,args.message,"")
                 xmpp.connect()
                 xmpp.process(forever=False)
