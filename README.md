@@ -1,6 +1,8 @@
 # Networks Project: XMMP Client
 ![Sign Up/Sign In](/captures/loginmenu.png)
 ![Main menu](/captures/mainmenu.png)
+
+Watch demo: https://youtu.be/cFBAvB9yRn0
 ## Goals
 - Use an open and known protocol standards
 - Understand the asynchronous programming foundations required to meet to network development needs
